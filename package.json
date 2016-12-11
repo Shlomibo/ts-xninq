@@ -1,0 +1,22 @@
+{
+  "name": "ts-xninq",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/xninq.js",
+  "scripts": {
+    "test": " ",
+    "build": "tsc -p .",
+    "dev-watch": "tsc -w -p .",
+    "lint": "tslint -t msbuild ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com-shlomibo:Shlomibo/ts-xninq.git"
+  },
+  "author": "Shlomi Borovitz",
+  "license": "ISC",
+  "devDependencies": {
+    "tslint": "^4.0.2",
+    "typescript": "^2.1.4"
+  }
+}
