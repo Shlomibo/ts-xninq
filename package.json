@@ -2,7 +2,7 @@
   "name": "ts-xninq",
   "version": "0.1.0",
   "description": "",
-  "main": "dist/xninq.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": " ",
     "build": "tsc -p .",
@@ -16,7 +16,15 @@
   "author": "Shlomi Borovitz",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^6.0.51",
+    "@types/xml2js": "0.0.32",
     "tslint": "^4.0.2",
     "typescript": "^2.1.4"
+  },
+  "dependencies": {
+    "@types/node-uuid": "git+https://github.com/Shlomibo/types-node-uuid.git",
+    "node-uuid": "^1.4.7",
+    "ts-ninq": "git+https://github.com/Shlomibo/TS-NINQ.git",
+    "xml2js": "^0.4.17"
   }
 }
