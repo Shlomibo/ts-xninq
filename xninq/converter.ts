@@ -63,4 +63,19 @@ export class Converter {
 	static string(value?: string): string {
 		return value || '';
 	}
+
+	static fromValue(value: any): string {
+		if (typeof value === 'string') {
+			return value;
+		}
+		else if ((value === undefined) || (value === null)) {
+			return '';
+		}
+		else if ((typeof value !== 'object') || (typeof value.toString === 'function')) {
+			return value.toString();
+		}
+		else {
+			return Object.prototype.toString.call(value);
+		}
+	}
 }

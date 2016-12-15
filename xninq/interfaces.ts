@@ -1,4 +1,4 @@
-import Ninq from 'ts-ninq';
+import _ from 'ts-ninq';
 import { XName, XNameClass, XNamespaceClass, XNamespace } from './xname';
 import { Converter, Maybe } from './converter';
 import { Stream } from 'stream';
@@ -36,6 +36,7 @@ export enum XmlNodeType {
 	whitespace,
 	xmlDeclaration,
 }
+export type NodeType = keyof typeof XmlNodeType;
 
 export interface XmlLineInfo {
 	readonly lineNumber: number;
@@ -49,9 +50,9 @@ export interface IChangeEventArgs {
 	readonly change: XObjectChange;
 }
 export interface IXObject extends MayHasLineInfo {
-	readonly baseUrl?: string;
+	readonly baseUri?: string;
 	readonly document?: IXDocument;
-	readonly nodeType: keyof typeof XmlNodeType;
+	readonly nodeType: NodeType;
 	readonly parent?: IXElement;
 
 	on(event: ChangeEvent, handler: IChangeEventHandler): this;
@@ -77,13 +78,13 @@ export interface IXNode extends IXObject {
 
 	addAfterSelf(...content: any[]): void;
 	addBeforeSelf(...content: any[]): void;
-	ancestors(): Ninq<IXNode>;
-	elementsAfterSelf(name?: XName): Ninq<IXElement>;
-	elementsBeforeSelf(name?: XName): Ninq<IXElement>;
+	ancestors(): _<IXNode>;
+	elementsAfterSelf(name?: XName): _<IXElement>;
+	elementsBeforeSelf(name?: XName): _<IXElement>;
 	isAfter(node: IXNode): boolean;
 	isBefore(node: IXNode): boolean;
-	nodesAfterSelf(): Ninq<IXNode>;
-	nodesBeforeSelf(): Ninq<IXNode>;
+	nodesAfterSelf(): _<IXNode>;
+	nodesBeforeSelf(): _<IXNode>;
 	remove(): void;
 	replaceWith(content: any, ...contents: any[]): void;
 	toString(saveOptions?: SaveOptions): string;
@@ -112,11 +113,11 @@ export interface IXContainer extends IXNode {
 
 	add(...content: any[]): void;
 	addFirst(...content: any[]): void;
-	descendantNodes(): Ninq<IXNode>;
-	descendant(name?: XName): Ninq<IXElement>;
+	descendantNodes(): _<IXNode>;
+	descendant(name?: XName): _<IXElement>;
 	element(name: XName): Maybe<IXElement>;
-	elements(name?: XName): Ninq<IXElement>;
-	nodes(): Ninq<IXNode>;
+	elements(name?: XName): _<IXElement>;
+	nodes(): _<IXNode>;
 	removeNodes(): void;
 	replaceNodes(content: any, ...contents: any[]): void;
 }
@@ -145,11 +146,11 @@ export interface IXElement extends IXContainer {
 	value: string;
 	readonly to: Converter;
 
-	ancestorsAndSelf(name?: XName): Ninq<IXElement>;
+	ancestorsAndSelf(name?: XName): _<IXElement>;
 	attribute(name: XName): Maybe<IXAttribute>;
-	attributes(name?: XName): Ninq<IXAttribute>;
-	descendantNodesAndSelf(): Ninq<IXNode>;
-	descendantsAndSelf(name?: XName): Ninq<IXElement>;
+	attributes(name?: XName): _<IXAttribute>;
+	descendantNodesAndSelf(): _<IXNode>;
+	descendantsAndSelf(name?: XName): _<IXElement>;
 	getNamespaceOfPrefix(prefix: string): XNamespaceClass;
 	getPrefixOfNamespace(namespace: XNamespace): string;
 	removeAll(): void;

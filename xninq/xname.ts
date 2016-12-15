@@ -101,8 +101,8 @@ export class XNameClass {
 		if (typeof $namespace === 'string') {
 			$namespace = XNamespaceClass.get($namespace);
 		}
-		// We want only the local name
-		if (name instanceof XNameClass) {
+		if (typeof name !== 'string') {
+			$namespace = name.$namespace;
 			name = name.localName;
 		}
 		return new XNameClass($namespace, name);
