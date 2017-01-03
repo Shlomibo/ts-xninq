@@ -3,6 +3,9 @@ const xobject_1 = require("./xobject");
 const ts_ninq_1 = require("ts-ninq");
 const nodes_list_1 = require("./nodes-list");
 const nodes_list_2 = require("./nodes-list");
+const converter_1 = require("./converter");
+const xobject_2 = require("./xobject");
+const xattribute_1 = require("./xattribute");
 const nodeTypes = [
     'cdata',
     'comment',
@@ -52,6 +55,49 @@ class XNode extends xobject_1.default {
             .filter(node => node.nodeType === 'element')
             .cast();
     }
+    isAfter(node) {
+        let result = false;
+        if (nodes_list_1.isNodesContainer(this.parent) && (node instanceof XNode)) {
+            result = this.parent._nodes
+                .before(this)
+                .includes(node);
+        }
+        return result;
+    }
+    isBefore(node) {
+        let result = false;
+        if (nodes_list_1.isNodesContainer(this.parent) && (node instanceof XNode)) {
+            result = this.parent._nodes
+                .after(this)
+                .includes(node);
+        }
+        return result;
+    }
+    nodesAfterSelf() {
+        return ts_ninq_1.default.of(!nodes_list_1.isNodesContainer(this.parent)
+            ? ts_ninq_1.default.empty()
+            : this.parent._nodes.after(this));
+    }
+    nodesBeforeSelf() {
+        return ts_ninq_1.default.of(!nodes_list_1.isNodesContainer(this.parent)
+            ? ts_ninq_1.default.empty()
+            : this.parent._nodes.before(this));
+    }
+    remove() {
+        if (nodes_list_1.isNodesContainer(this.parent)) {
+            this.parent._nodes.remove(this);
+            this._setParent();
+        }
+    }
+    replaceWith(content, ...contents) {
+        if (xobject_2.isValidParent(this.parent)) {
+            this.parent._attriubtes.push(contents.filter(content => content instanceof xattribute_1.default));
+            this.parent._nodes.insert(this, ts_ninq_1.default.of(contents)
+                .map(converter_1.Converter.from)
+                .filter(obj => obj instanceof XNode)
+                .cast());
+        }
+    }
     static from(node) {
         if (!(node instanceof XNode) || !!node.parent) {
             node = node.clone();
@@ -63,3 +109,5 @@ class XNode extends xobject_1.default {
     }
 }
 exports.XNode = XNode;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = XNode;

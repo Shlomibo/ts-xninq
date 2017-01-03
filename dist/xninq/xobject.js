@@ -1,7 +1,8 @@
 "use strict";
 const events_1 = require("events");
-const converter_1 = require("./converter");
-const ts_ninq_1 = require("ts-ninq");
+const nodes_list_1 = require("./nodes-list");
+const attributes_lists_1 = require("./attributes-lists");
+const escape_1 = require("./escape");
 class XObject {
     constructor(other) {
         this._emitter = new events_1.EventEmitter();
@@ -20,6 +21,12 @@ class XObject {
     get parent() {
         return this._parent;
     }
+    set parent(parent) {
+        if (this._parent && parent) {
+            throw new Error('Cannot set parent for attached element');
+        }
+        this._parent = parent;
+    }
     _setBaseUri(value) {
         this._baseUri = value;
         return this;
@@ -29,6 +36,12 @@ class XObject {
         return this;
     }
     _setParent(parent) {
+        if (this._parent && parent) {
+            throw new Error('Cannot set parent on attached element');
+        }
+        if (parent && !isValidParent(parent)) {
+            throw new TypeError('parent');
+        }
         this._parent = parent;
         return this;
     }
@@ -62,20 +75,11 @@ class XObject {
 exports.XObject = XObject;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = XObject;
-function escape(strings, ...values) {
-    const valueStrings = new ts_ninq_1.default(values)
-        .map(converter_1.Converter.fromValue)
-        .map(xmlEscape)
-        .toArray();
-    const joint = [];
-    for (let i = 0; i < valueStrings.length; i++) {
-        joint.push(strings[i]);
-        joint.push(valueStrings[i]);
-    }
-    joint.push(ts_ninq_1.default.last(strings));
-    return joint.join('');
-    function xmlEscape(val) {
-        return val;
-    }
+function isValidParent(parent) {
+    return nodes_list_1.isNodesContainer(parent) &&
+        attributes_lists_1.isAttributesContainer(parent);
 }
-exports.escape = escape;
+exports.isValidParent = isValidParent;
+exports.escape = escape_1.createEscape((val) => {
+    return val;
+});

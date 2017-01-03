@@ -62,5 +62,7 @@ class Converter {
             return Object.prototype.toString.call(value);
         }
     }
+    static from(value) {
+    }
 }
 exports.Converter = Converter;

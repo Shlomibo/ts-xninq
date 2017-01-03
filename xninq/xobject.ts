@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events';
 import { ChangeEvent, XObjectChange, IXObject, NodeType, IXDocument, IXElement } from './interfaces';
-import { Maybe, Converter } from './converter';
-import _ from 'ts-ninq';
+import { Maybe } from './converter';
 import { isNodesContainer, NodeContainer } from './nodes-list';
 import { isAttributesContainer, AttributesContainer } from './attributes-lists';
+import { createEscape } from './escape';
 
 export type ChangeEventHandler = (event: ChangeEvent, e: ChangeEventArgs) => void;
 
@@ -115,22 +115,7 @@ export function isValidParent(parent?: any): parent is NodeContainer & Attribute
 		isAttributesContainer(parent);
 }
 
-export function escape(strings: TemplateStringsArray, ...values: any[]): string {
-	const valueStrings = new _(values)
-		.map(Converter.fromValue)
-		.map(xmlEscape)
-		.toArray();
-	const joint = [];
 
-	for (let i = 0; i < valueStrings.length; i++) {
-		joint.push(strings[i]);
-		joint.push(valueStrings[i]);
-	}
-	joint.push(_.last(strings));
-
-	return joint.join('');
-
-	function xmlEscape(val: string): string {
-		return val;
-	}
-}
+export const escape = createEscape((val: any): string => {
+	return val;
+});
