@@ -109,14 +109,15 @@ export abstract class XNode extends XObject implements IXNode {
 		if (isValidParent(this.parent)) {
 			const replaced = _.of([content])
 				.concat(contents);
+			const converted = [...this.parent.convertContent(
+				_.of([content])
+					.concat(contents)
+					.filter(content => !(content instanceof XAttribute))
+			)];
 			this.parent._attriubtes.push(replaced.filter(content => content instanceof XAttribute));
 			this.parent._nodes.insert(
 				this,
-				this.parent.convertContent(
-					_.of([content])
-						.concat(contents)
-						.filter(content => !(content instanceof XAttribute))
-				)
+				converted
 			);
 		}
 	}

@@ -1,7 +1,7 @@
 import _ from 'ts-ninq';
 import { XName, XNameClass, XNamespaceClass, XNamespace } from './xname';
 import { Converter, Maybe } from './converter';
-import { Stream } from 'stream';
+import { Writable as Stream } from 'stream';
 
 export type ChangeEvent = 'changing' | 'changed';
 export type IChangeEventHandler = (event: ChangeEvent, e: IChangeEventArgs) => void;
@@ -208,7 +208,7 @@ export interface IXDocument extends IXContainer {
 	readonly root: IXElement;
 	parent: undefined;
 
-	save(to: string | Stream, saveOptions?: SaveOptions): void;
+	save(to: string | Stream, saveOptions?: SaveOptions): Promise<void>;
 	toString(saveOptions?: SaveOptions): string;
 	clone(): IXDocument;
 }

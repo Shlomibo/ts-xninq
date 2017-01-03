@@ -1,4 +1,4 @@
-import { IXContainer, IXNode, IXElement, isXContainer, NodeType } from './interfaces';
+import { IXContainer, IXNode, IXElement, isXContainer, NodeType, SaveOptions } from './interfaces';
 import NodeList from './nodes-list';
 import { isNodesContainer } from './nodes-list';
 import _ from 'ts-ninq';
@@ -75,12 +75,11 @@ export abstract class XContainer extends XNode implements IXContainer {
 	}
 
 	replaceNodes(content: any, ...contents: any[]): void {
+		const newNodes = [...this.convertContent(
+			_.concat([content], contents)
+		)];
 		this._nodes.clear();
-		this._nodes.push(
-			this.convertContent(
-				_.concat([content], contents)
-			)
-		);
+		this._nodes.push(newNodes);
 	}
 
 	protected convertContent(content: Iterable<any>): Iterable<XNode> {
@@ -90,7 +89,7 @@ export abstract class XContainer extends XNode implements IXContainer {
 			.cast<XNode>();
 	}
 
-	private validateNode(node?: XObject): boolean {
+	protected validateNode(node?: XObject): boolean {
 		if (node && !this.validNodeTypes.includes(node.nodeType)) {
 			throw new TypeError('Invalid node type: ' + node.nodeType);
 		}
@@ -99,6 +98,8 @@ export abstract class XContainer extends XNode implements IXContainer {
 
 	protected abstract get validNodeTypes(): NodeType[];
 	abstract clone(): XContainer;
+
+	protected abstract _toString(saveOtions: SaveOptions, indentation: number): string;
 }
 
 export default XContainer;

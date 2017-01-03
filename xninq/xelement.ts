@@ -1,15 +1,16 @@
 import { XContainer } from './xcontainer';
-import { IXElement, IXNode, IXAttribute, SaveOptions } from './interfaces';
+import { IXElement, IXNode, IXAttribute, SaveOptions, NodeType } from './interfaces';
 import { XName, isXName, XNamespaceClass, XNamespace, XNameClass } from './xname';
 import _ from 'ts-ninq';
 import { Maybe, Converter } from './converter';
-import { Stream } from 'stream';
+import { Writable as Stream } from 'stream';
 
 export class XElement extends XContainer implements IXElement {
 	private _name: XNameClass;
 	readonly nodeType: 'element';
 	value: string;
 	readonly to: Converter;
+	protected readonly validNodeTypes: NodeType[];
 
 	constructor(name: XName, ...content: any[]);
 	constructor(other: IXElement);
@@ -142,4 +143,5 @@ export class XElement extends XContainer implements IXElement {
 	clone(): XElement {
 		return new XElement(this);
 	}
+
 }

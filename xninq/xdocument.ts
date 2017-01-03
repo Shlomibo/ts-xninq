@@ -1,13 +1,25 @@
 import XContainer from './xcontainer';
-import { IXDocument, IXNode, IXElement, SaveOptions, isXDocument, isXDeclaration, isXDocumentType, isXElement, isXComment } from './interfaces';
+import {
+	IXDocument,
+	SaveOptions,
+	isXDocument,
+	isXDeclaration,
+	isXDocumentType,
+	isXElement,
+	isXComment,
+	NodeType,
+	IXDeclaration
+} from './interfaces';
 import XDeclaration from './xdeclaration';
 import XDocumentType from './xdocument-type';
 import { XElement } from './xelement';
 import { Maybe } from './converter';
 import _ from 'ts-ninq';
-import { XName } from './xname';
-import { Stream } from 'stream';
+import { createWriteStream } from 'fs';
 import XComment from './xcomment';
+import XObject from './xobject';
+import XNode from './xnode';
+import { Writable as Stream } from 'stream';
 
 export class XDocument extends XContainer implements IXDocument {
 	readonly parent: undefined;
@@ -15,9 +27,10 @@ export class XDocument extends XContainer implements IXDocument {
 	readonly documentType?: XDocumentType;
 	readonly nodeType: 'document';
 	readonly root: XElement;
+	protected readonly validNodeTypes: NodeType[];
 
 	constructor(other: IXDocument);
-	constructor(declaration: XDeclaration, ...content: any[]);
+	constructor(declaration: IXDeclaration, ...content: any[]);
 	constructor(...content: any[]);
 	constructor(otherOrDecOrContent: any, ...content: any[]) {
 		if (isXDocument(otherOrDecOrContent)) {
@@ -63,64 +76,81 @@ export class XDocument extends XContainer implements IXDocument {
 		if (!this.root) {
 			throw new Error('Missing root element');
 		}
-		
+
 		this.nodeType = 'document';
+		this.validNodeTypes = [
+			'comment',
+			'element',
+			'documentType',
+		];
 	}
 
-	get firstNode(): Maybe<IXNode> {
-
+	get firstNode(): Maybe<XNode> {
+		return this._nodes.firstOrDefault();
 	}
 
-	get lastNode(): Maybe<IXNode> {
-
+	get lastNode(): Maybe<XNode> {
+		return this._nodes.lastOrDefault();
 	}
 
-	add(...content: any[]): void {
-
+	save(to: string | Stream, saveOptions?: SaveOptions): Promise<void> {
+		if (typeof to === 'string') {
+			to = createWriteStream(to);
+		}
+		const callbackHandler = _.fromCallback<void>(),
+			writeAwaiter = Promise.resolve(callbackHandler);
+		to.on('error', err => callbackHandler(err));
+		to.end(this.toString(saveOptions), callbackHandler);
+		return writeAwaiter;
 	}
 
-	addFirst(...content: any[]): void {
-
+	toString(saveOptions = SaveOptions.none): string {
+		const result: string[] = [];
+		if (this.declaration) {
+			result.push(this.declaration.toString());
+		}
+		if (this.documentType) {
+			result.push(this.documentType.toString());
+		}
+		result.push(...this._nodes.map(node =>
+			node.toString(saveOptions)
+		));
+		return result.join(
+			(saveOptions & SaveOptions.disableFormatting) === SaveOptions.disableFormatting
+				? ''
+				: '\n'
+		);
 	}
 
-	descendantNodes(): _<IXNode> {
-
-	}
-
-	descendant(name?: XName): _<IXElement> {
-
-	}
-
-	element(name: XName): Maybe<IXElement> {
-
-	}
-
-	elements(name?: XName): _<IXElement> {
-
-	}
-
-	nodes(): _<IXNode> {
-
-	}
-
-	removeNodes(): void {
-
-	}
-
-	replaceNodes(content: any, ...contents: any[]): void {
-
-	}
-
-	save(to: string | Stream, saveOptions?: SaveOptions): void {
-
-	}
-
-	toString(saveOptions?: SaveOptions): string {
-
+	protected _toString(saveOptions?: SaveOptions): string {
+		return this.toString(saveOptions);
 	}
 
 	clone(): XDocument {
 		return new XDocument(this);
+	}
+
+	protected validateNode(node?: XObject): boolean {
+		const result = super.validateNode(node);
+		if (node) {
+			switch (node.nodeType) {
+				case 'element': {
+					if (this.root) {
+						throw new Error('Duplicate root element');
+					}
+					break;
+				}
+				case 'documentType': {
+					if (this.documentType) {
+						throw new Error('Duplicate doc type');
+					}
+					break;
+				}
+				default: break;
+			}
+		}
+
+		return result;
 	}
 }
 
