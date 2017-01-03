@@ -146,9 +146,11 @@ export interface IXContainer extends IXNode {
 	clone(): IXContainer;
 }
 export interface IXDeclaration {
-	encoding: string;
+	encoding?: string;
 	standalone?: 'yes' | 'no';
-	version?: string;
+	version: string;
+
+	toString(): string;
 }
 export interface IXDocument extends IXContainer {
 	declaration?: IXDeclaration;
