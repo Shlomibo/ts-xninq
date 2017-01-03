@@ -1,13 +1,14 @@
-import { XNode } from './xnode';
-import { IXContainer, IXNode, IXElement } from './interfaces';
+import { IXContainer, IXNode, IXElement, isXContainer, NodeType } from './interfaces';
 import NodeList from './nodes-list';
 import { isNodesContainer } from './nodes-list';
 import _ from 'ts-ninq';
-import { XName } from './xname';
-import { Maybe } from './converter';
+import { XName, XNameClass } from './xname';
+import { Maybe, Converter } from './converter';
+import XNode from './xnode';
+import XObject from './xobject';
 
 export abstract class XContainer extends XNode implements IXContainer {
-	private _nodes: NodeList;
+	protected _nodes: NodeList;
 
 	constructor(other?: IXContainer) {
 		super(other);
@@ -18,15 +19,85 @@ export abstract class XContainer extends XNode implements IXContainer {
 		this._nodes = new NodeList(content);
 	}
 
-	abstract add(...content: any[]): void;
-	abstract addFirst(...content: any[]): void;
-	abstract descendantNodes(): _<IXNode>;
-	abstract descendant(name?: XName): _<IXElement>;
-	abstract element(name: XName): Maybe<IXElement>;
-	abstract elements(name?: XName): _<IXElement>;
-	abstract nodes(): _<IXNode>;
-	abstract removeNodes(): void;
-	abstract replaceNodes(content: any, ...contents: any[]): void;
+	add(...content: any[]): void {
+		this._nodes.push(
+			_.of(content)
+				.map(Converter.from)
+				.filter(_.identity)
+				.cast<XNode>()
+		);
+	}
+	addFirst(...content: any[]): void {
+		this._nodes.unshift(
+			_.of(content)
+				.map(Converter.from)
+				.filter(_.identity)
+				.cast<XNode>()
+		);
+	}
+	descendantNodes(): _<IXNode> {
+		return this._nodes
+			.flatMap(
+			node => isXContainer(node)
+				? _.concat([node], node.descendantNodes())
+				: [node],
+			node => node
+			);
+	}
+
+	descendant(name?: XName): _<IXElement> {
+		return this.elements()
+			.flatMap(
+			element => _.concat([element], element.descendant()),
+			element => element
+			);
+
+	}
+	element(name: XName): Maybe<IXElement> {
+		return this.elements(name)
+			.firstOrDefault();
+	}
+	elements(name?: XName): _<IXElement> {
+		let result = _.of(this._nodes.elements.values());
+		if (name) {
+			result = result
+				.filter(element => !name || (element.name as XNameClass).equals(name));
+		}
+		return result;
+	}
+
+	nodes(): _<IXNode> {
+		return new _(this._nodes);
+	}
+
+	removeNodes(): void {
+		this._nodes.clear();
+	}
+
+	replaceNodes(content: any, ...contents: any[]): void {
+		this._nodes.clear();
+		this._nodes.push(
+			this.convertContent(
+				_.concat([content], contents)
+			)
+		);
+	}
+
+	protected convertContent(content: Iterable<any>): Iterable<XNode> {
+		return _.of(content)
+			.map(Converter.from)
+			.filter(node => this.validateNode(node))
+			.cast<XNode>();
+	}
+
+	private validateNode(node?: XObject): boolean {
+		if (node && !this.validNodeTypes.includes(node.nodeType)) {
+			throw new TypeError('Invalid node type: ' + node.nodeType);
+		}
+		return !!node;
+	}
+
+	protected abstract get validNodeTypes(): NodeType[];
 	abstract clone(): XContainer;
 }
 

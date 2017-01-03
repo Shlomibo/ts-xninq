@@ -59,7 +59,14 @@ export abstract class XObject implements IXObject {
 		return this;
 	}
 
-	protected _setDocument(doc?: IXDocument): this {
+	_setDocument(doc?: IXDocument): this {
+		if (this._document && doc) {
+			throw new Error('Cannot set document on attached element');
+		}
+		if (doc && !(doc instanceof XObject)) {
+			throw new TypeError('document');
+		}
+
 		this._document = doc;
 		return this;
 	}

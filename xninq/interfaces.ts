@@ -70,6 +70,11 @@ export interface IXObject extends MayHasLineInfo {
 
 	clone(): IXObject;
 }
+export function isXObject(val: any): val is IXObject {
+	return val &&
+		val.nodeType &&
+		NodeTypeEnum[val.nodeType] !== undefined;
+}
 export interface IXAttribute extends IXObject {
 	readonly isNamespaceDeclaration: boolean;
 	readonly name: XNameClass;
@@ -84,6 +89,10 @@ export interface IXAttribute extends IXObject {
 	toString(): string;
 
 	clone(): IXAttribute;
+}
+export function isXAttribute(val: any): val is IXAttribute {
+	return isXObject(val) &&
+		val.nodeType === 'attribute';
 }
 export interface IXNode extends IXObject {
 	readonly nextNode?: IXNode;
@@ -104,6 +113,16 @@ export interface IXNode extends IXObject {
 
 	clone(): IXNode;
 }
+export function isXNode(obj: any): obj is IXNode {
+	const nodeTypes: XNodeTypes[] = [
+		'cdata',
+		'comment',
+		'document',
+		'documentType',
+		'element',
+	];
+	return obj && nodeTypes.includes(obj.nodeType);
+}
 export interface IXDocumentType extends IXNode {
 	internalSubset?: string;
 	name: string;
@@ -113,11 +132,19 @@ export interface IXDocumentType extends IXNode {
 
 	clone(): IXDocumentType;
 }
+export function isXDocumentType(val: any): val is IXDocumentType {
+	return isXObject(val) &&
+		val.nodeType === 'documentType';
+}
 export interface IXComment extends IXNode {
 	readonly nodeType: 'comment';
 	value: string;
 
 	clone(): IXComment;
+}
+export function isXComment(val: any): val is IXComment {
+	return isXObject(val) &&
+		val.nodeType === 'comment';
 }
 export interface IXText extends IXNode {
 	readonly nodeType: 'text' | 'cdata';
@@ -125,9 +152,17 @@ export interface IXText extends IXNode {
 
 	clone(): IXText;
 }
+export function isXText(val: any): val is IXText {
+	return isXObject(val) &&
+		['text', 'cdata'].includes(val.nodeType);
+}
 export interface IXCData extends IXText {
 	readonly nodeType: 'cdata';
 	clone(): IXCData;
+}
+export function isXCData(val: any): val is IXCData {
+	return isXText(val) &&
+		val.nodeType === 'cdata';
 }
 export interface IXContainer extends IXNode {
 	readonly firstNode?: IXNode;
@@ -145,6 +180,10 @@ export interface IXContainer extends IXNode {
 
 	clone(): IXContainer;
 }
+export function isXContainer(val: any): val is IXContainer {
+	return isXObject(val) &&
+		['element', 'document'].includes(val.nodeType);
+}
 export interface IXDeclaration {
 	encoding?: string;
 	standalone?: 'yes' | 'no';
@@ -152,15 +191,30 @@ export interface IXDeclaration {
 
 	toString(): string;
 }
+export function isXDeclaration(val: any): val is IXDeclaration {
+	return val &&
+		val.version &&
+		isInt(val.version);
+
+	function isInt(val: string) {
+		const num = Number.parseInt(val);
+		return num === ~~num;
+	}
+}
 export interface IXDocument extends IXContainer {
 	declaration?: IXDeclaration;
 	readonly documentType?: IXDocumentType;
 	readonly nodeType: 'document';
 	readonly root: IXElement;
+	parent: undefined;
 
 	save(to: string | Stream, saveOptions?: SaveOptions): void;
 	toString(saveOptions?: SaveOptions): string;
 	clone(): IXDocument;
+}
+export function isXDocument(val: any): val is IXDocument {
+	return isXObject(val) &&
+		val.nodeType === 'document';
 }
 export interface IXElement extends IXContainer {
 	readonly firstAttribute?: IXAttribute;
@@ -191,4 +245,8 @@ export interface IXElement extends IXContainer {
 	toString(saveOptions?: SaveOptions): string;
 
 	clone(): IXElement;
+}
+export function isXElement(val: any): val is IXElement {
+	return isXObject(val) &&
+		val.nodeType === 'element';
 }

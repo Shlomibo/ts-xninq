@@ -1,16 +1,24 @@
 import _ from 'ts-ninq';
 import { isIterable, isArrayLike, ArrayLikeIterable, ReverseArrayLikeIterable } from 'ts-ninq';
-import { IXObject } from './interfaces';
-import { Converter } from './converter';
 import XObject from './xobject';
+import { XElement } from './xelement';
+import XDocument from './xdocument';
 
-export class XObjectList<TClass extends XObject, TInterface extends IXObject> extends _<TClass> {
-	private _list: TClass[];
+export class XObjectList<T extends XObject> extends _<T> {
+	private _list: T[];
+	parent?: XElement;
+	document?: XDocument;
 
-	constructor(objects?: Iterable<TInterface>) {
-		const list: TClass[] = [];
+	constructor(
+		parent?: XElement,
+		document?: XDocument,
+		objects?: Iterable<T>,
+	) {
+		const list: T[] = [];
 		super(list);
 		this._list = list;
+		this.parent = parent;
+		this.document = document;
 
 		if (objects) {
 			this.push(objects);
@@ -21,21 +29,25 @@ export class XObjectList<TClass extends XObject, TInterface extends IXObject> ex
 		return super.length!;
 	}
 
-	after(anchor: number | TClass): _<TClass> {
+	after(anchor: number | T): _<T> {
 		anchor = typeof anchor === 'number'
 			? anchor
 			: this._list.indexOf(anchor);
 		return _.of(new ArrayLikeIterable(this._list, anchor));
 	}
 
-	before(anchor: number | TClass): _<TClass> {
+	before(anchor: number | T): _<T> {
 		anchor = typeof anchor === 'number'
 			? anchor
 			: this._list.indexOf(anchor);
 		return _.of(new ReverseArrayLikeIterable(this._list, anchor));
 	}
 
-	insertBefore(TClass: TClass, objects: TInterface | Iterable<TInterface>) {
+	clear(): void {
+		this._list.splice(0, this._list.length);
+	}
+
+	insertBefore(TClass: T, objects: T | Iterable<T>) {
 		const nodeIndex = this._list.indexOf(TClass),
 			count = isIterable(objects)
 				? _.count(objects)
@@ -44,7 +56,7 @@ export class XObjectList<TClass extends XObject, TInterface extends IXObject> ex
 		this.insert(nodeIndex - count, objects);
 	}
 
-	insert(after: number | TClass, objects: TInterface | Iterable<TInterface>) {
+	insert(after: number | T, objects: T | Iterable<T>) {
 		const at = typeof after === 'number'
 			? after
 			: this._list.indexOf(after);
@@ -55,13 +67,22 @@ export class XObjectList<TClass extends XObject, TInterface extends IXObject> ex
 		if (!isIterable(objects)) {
 			objects = [objects];
 		}
-		const items = _.map(objects, Converter.from) as Iterable<TClass>;
-		this._list.splice(at, 0, ...items);
+		objects = _.map(objects, obj => {
+			if (!(obj instanceof XObject) ||
+				(obj.parent && obj.parent !== this.parent)) {
+
+				obj = obj.clone() as T;
+				obj._setParent(this.parent);
+				obj._setDocument(this.document);
+			}
+			return obj;
+		});
+		this._list.splice(at, 0, ...objects);
 	}
 
-	remove(from: number | TClass): TClass;
-	remove(from: number | TClass, count: number): TClass[];
-	remove(from: number | TClass, count?: number): TClass | TClass[] {
+	remove(from: number | T): T;
+	remove(from: number | T, count: number): T[];
+	remove(from: number | T, count?: number): T | T[] {
 		if (typeof count !== 'number') {
 			count = 1;
 		}
@@ -80,27 +101,40 @@ export class XObjectList<TClass extends XObject, TInterface extends IXObject> ex
 			: result;
 	}
 
-	push(nodes: TInterface | Iterable<TInterface>): void {
+	push(nodes: T | Iterable<T>): void {
 		this.insert(this.length, nodes);
 	}
 
-	pop(): TClass;
-	pop(count: number): TClass[];
-	pop(count?: number): TClass | TClass[] {
+	pop(): T;
+	pop(count: number): T[];
+	pop(count?: number): T | T[] {
 		count = typeof count === 'number'
 			? count
 			: 1;
 		return this.remove(this.length - count, count);
 	}
 
-	unshift(nodes: TInterface | Iterable<TInterface>) {
+	unshift(nodes: T | Iterable<T>) {
 		this.insert(0, nodes);
 	}
 
-	shift(): TClass;
-	shift(count: number): TClass[];
-	shift(count?: number): TClass | TClass[] {
+	shift(): T;
+	shift(count: number): T[];
+	shift(count?: number): T | T[] {
 		return this.remove(0, count as any);
+	}
+
+	_setParent(parent?: XElement) {
+		for (let item of this) {
+			item._setParent(parent);
+		}
+		this.parent = parent;
+	}
+	_setDocument(doc?: XDocument) {
+		for (let item of this) {
+			item._setDocument(doc);
+		}
+		this.document = doc;
 	}
 }
 
