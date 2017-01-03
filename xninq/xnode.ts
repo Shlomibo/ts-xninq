@@ -138,3 +138,5 @@ export abstract class XNode extends XObject implements IXNode {
 		return obj && nodeTypes.includes(obj.nodeType);
 	}
 }
+
+export default XNode;

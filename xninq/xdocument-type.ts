@@ -51,3 +51,5 @@ export class XDocumentType extends XNode implements IXDocumentType {
 			]>`;
 	}
 }
+
+export default XDocumentType;
