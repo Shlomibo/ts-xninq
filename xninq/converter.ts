@@ -1,4 +1,5 @@
 import * as uuid from 'node-uuid';
+import XObject from './xobject';
 export type Maybe<T> = T | undefined;
 export type Getter = () => Maybe<string>;
 
@@ -77,5 +78,9 @@ export class Converter {
 		else {
 			return Object.prototype.toString.call(value);
 		}
+	}
+
+	static from(value: any): Maybe<XObject> {
+
 	}
 }

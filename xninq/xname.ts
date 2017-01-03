@@ -118,3 +118,8 @@ export class XNameClass {
 
 export type XName = string | XNameClass;
 export type XNamespace = string | XNamespaceClass;
+
+export function isXName(value: any): value is XName {
+	return typeof value === 'string' ||
+		value instanceof XNameClass;
+}

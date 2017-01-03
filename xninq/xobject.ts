@@ -2,6 +2,8 @@ import { EventEmitter } from 'events';
 import { ChangeEvent, XObjectChange, IXObject, NodeType, IXDocument, IXElement } from './interfaces';
 import { Maybe, Converter } from './converter';
 import _ from 'ts-ninq';
+import { isNodesContainer, NodeContainer } from './nodes-list';
+import { isAttributesContainer, AttributesContainer } from './attributes-lists';
 
 export type ChangeEventHandler = (event: ChangeEvent, e: ChangeEventArgs) => void;
 
@@ -44,18 +46,37 @@ export abstract class XObject implements IXObject {
 		return this._parent;
 	}
 
+	set parent(parent: Maybe<IXElement>) {
+		if (this._parent && parent) {
+			throw new Error('Cannot set parent for attached element');
+		}
+
+		this._parent = parent;
+	}
+
 	protected _setBaseUri(value?: string): this {
 		this._baseUri = value;
 		return this;
 	}
+
 	protected _setDocument(doc?: IXDocument): this {
 		this._document = doc;
 		return this;
 	}
-	protected _setParent(parent?: IXElement): this {
+
+	_setParent(parent?: IXElement): this {
+		if (this._parent && parent) {
+			throw new Error('Cannot set parent on attached element');
+		}
+		if (parent && !isValidParent(parent)) {
+			throw new TypeError('parent');
+		}
 		this._parent = parent;
 		return this;
 	}
+
+
+	abstract clone(): XObject;
 
 	on(event: ChangeEvent, handler: ChangeEventHandler): this {
 		this._emitter.on(event, handler);
@@ -88,6 +109,11 @@ export abstract class XObject implements IXObject {
 }
 
 export default XObject;
+
+export function isValidParent(parent?: any): parent is NodeContainer & AttributesContainer {
+	return isNodesContainer(parent) &&
+		isAttributesContainer(parent);
+}
 
 export function escape(strings: TemplateStringsArray, ...values: any[]): string {
 	const valueStrings = new _(values)

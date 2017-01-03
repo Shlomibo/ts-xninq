@@ -17,7 +17,7 @@ export enum XObjectChange {
 	remove,
 	value,
 };
-export enum XmlNodeType {
+export enum NodeTypeEnum {
 	none,
 	attribute,
 	cdata,
@@ -36,7 +36,16 @@ export enum XmlNodeType {
 	whitespace,
 	xmlDeclaration,
 }
-export type NodeType = keyof typeof XmlNodeType;
+export enum XNodeTypesEnum {
+	cdata = NodeTypeEnum.cdata,
+	comment = NodeTypeEnum.comment,
+	document = NodeTypeEnum.document,
+	documentType = NodeTypeEnum.documentType,
+	element = NodeTypeEnum.element,
+	text = NodeTypeEnum.text,
+}
+export type NodeType = keyof typeof NodeTypeEnum;
+export type XNodeTypes = keyof typeof XNodeTypesEnum;
 
 export interface XmlLineInfo {
 	readonly lineNumber: number;
@@ -58,6 +67,8 @@ export interface IXObject extends MayHasLineInfo {
 	on(event: ChangeEvent, handler: IChangeEventHandler): this;
 	once(event: ChangeEvent, handler: IChangeEventHandler): this;
 	removeListener(event: ChangeEvent, handler: IChangeEventHandler): void;
+
+	clone(): IXObject;
 }
 export interface IXAttribute extends IXObject {
 	readonly isNamespaceDeclaration: boolean;
@@ -71,6 +82,8 @@ export interface IXAttribute extends IXObject {
 	remove(): void;
 	setValue(value: any): void;
 	toString(): string;
+
+	clone(): IXAttribute;
 }
 export interface IXNode extends IXObject {
 	readonly nextNode?: IXNode;
@@ -88,24 +101,33 @@ export interface IXNode extends IXObject {
 	remove(): void;
 	replaceWith(content: any, ...contents: any[]): void;
 	toString(saveOptions?: SaveOptions): string;
+
+	clone(): IXNode;
 }
 export interface IXDocumentType extends IXNode {
-	internalSubset: string;
+	internalSubset?: string;
 	name: string;
 	readonly nodeType: 'documentType';
 	publicId?: string;
 	systemId?: string;
+
+	clone(): IXDocumentType;
 }
 export interface IXComment extends IXNode {
 	readonly nodeType: 'comment';
 	value: string;
+
+	clone(): IXComment;
 }
 export interface IXText extends IXNode {
 	readonly nodeType: 'text' | 'cdata';
 	value: string;
+
+	clone(): IXText;
 }
 export interface IXCData extends IXText {
 	readonly nodeType: 'cdata';
+	clone(): IXCData;
 }
 export interface IXContainer extends IXNode {
 	readonly firstNode?: IXNode;
@@ -120,6 +142,8 @@ export interface IXContainer extends IXNode {
 	nodes(): _<IXNode>;
 	removeNodes(): void;
 	replaceNodes(content: any, ...contents: any[]): void;
+
+	clone(): IXContainer;
 }
 export interface IXDeclaration {
 	encoding: string;
@@ -134,6 +158,7 @@ export interface IXDocument extends IXContainer {
 
 	save(to: string | Stream, saveOptions?: SaveOptions): void;
 	toString(saveOptions?: SaveOptions): string;
+	clone(): IXDocument;
 }
 export interface IXElement extends IXContainer {
 	readonly firstAttribute?: IXAttribute;
@@ -162,4 +187,6 @@ export interface IXElement extends IXContainer {
 	setElementValue(name: XName, value: any): void;
 	setValue(value: any): void;
 	toString(saveOptions?: SaveOptions): string;
+
+	clone(): IXElement;
 }

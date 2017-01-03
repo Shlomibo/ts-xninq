@@ -3,6 +3,7 @@ import XObject from './xobject';
 import { XName, XNameClass } from './xname';
 import { Converter, Maybe } from './converter';
 import { escape } from './xobject';
+import { isAttributesContainer } from './attributes-lists';
 
 export class XAttribute extends XObject implements IXAttribute {
 
@@ -34,15 +35,32 @@ export class XAttribute extends XObject implements IXAttribute {
 	}
 
 	get nextAttribute(): Maybe<XAttribute> {
-
+		let result;
+		if (isAttributesContainer(this.parent)) {
+			result = this.parent._attriubtes.after(this)
+				.firstOrDefault(undefined);
+		}
+		return result;
 	}
 
 	get previousAttribute(): Maybe<XAttribute> {
+		let result;
+		if (isAttributesContainer(this.parent)) {
+			result = this.parent._attriubtes.before(this)
+				.firstOrDefault(undefined);
+		}
+		return result;
+	}
 
+	clone(): XAttribute {
+		return new XAttribute(this);
 	}
 
 	remove(): void {
-
+		if (isAttributesContainer(this.parent)) {
+			this.parent._attriubtes.remove(this);
+			this._setParent();
+		}
 	}
 
 	setValue(value: any): void {
@@ -51,6 +69,13 @@ export class XAttribute extends XObject implements IXAttribute {
 
 	toString(): string {
 		return escape`${this.name}=${this.value}`;
+	}
+
+	static from(attribute: IXAttribute): XAttribute {
+		if (!(attribute instanceof XAttribute) || attribute.parent) {
+			return new XAttribute(attribute);
+		}
+		return attribute;
 	}
 }
 
