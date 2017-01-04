@@ -74,6 +74,10 @@ export class XNameClass {
 				(this.$namespace.equals(other.$namespace));
 		}
 	}
+	static equals(left: XName, right: any) {
+		return XNameClass.get(left)
+			.equals(right);
+	}
 
 	valueOf(): string {
 		return this.localName;

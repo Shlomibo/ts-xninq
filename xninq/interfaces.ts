@@ -1,4 +1,5 @@
 import _ from 'ts-ninq';
+import { NotNull } from 'ts-ninq';
 import { XName, XNameClass, XNamespaceClass, XNamespace } from './xname';
 import { Converter, Maybe } from './converter';
 import { Writable as Stream } from 'stream';
@@ -100,7 +101,7 @@ export interface IXNode extends IXObject {
 
 	addAfterSelf(...content: any[]): void;
 	addBeforeSelf(...content: any[]): void;
-	ancestors(): _<IXNode>;
+	ancestors(name?: XName): _<IXElement>;
 	elementsAfterSelf(name?: XName): _<IXElement>;
 	elementsBeforeSelf(name?: XName): _<IXElement>;
 	isAfter(node: IXNode): boolean;
@@ -146,22 +147,28 @@ export function isXComment(val: any): val is IXComment {
 	return isXObject(val) &&
 		val.nodeType === 'comment';
 }
-export interface IXText extends IXNode {
+export interface IXTextNode extends IXNode {
 	readonly nodeType: 'text' | 'cdata';
 	value: string;
-
-	clone(): IXText;
 }
-export function isXText(val: any): val is IXText {
+export function isXTextOrCData(val: any): val is IXTextNode {
 	return isXObject(val) &&
 		['text', 'cdata'].includes(val.nodeType);
 }
-export interface IXCData extends IXText {
+export interface IXText extends IXTextNode {
+	readonly nodeType: 'text';
+	clone(): IXText;
+}
+export function isXText(val: any): val is IXText {
+	return isXTextOrCData(val) &&
+		val.nodeType === 'text';
+}
+export interface IXCData extends IXTextNode {
 	readonly nodeType: 'cdata';
 	clone(): IXCData;
 }
 export function isXCData(val: any): val is IXCData {
-	return isXText(val) &&
+	return isXTextOrCData(val) &&
 		val.nodeType === 'cdata';
 }
 export interface IXContainer extends IXNode {
@@ -241,7 +248,7 @@ export interface IXElement extends IXContainer {
 	save(to: string | Stream, ...saveOptions: SaveOptions[]): void;
 	setAttributeValue(name: XName, value: any): void;
 	setElementValue(name: XName, value: any): void;
-	setValue(value: any): void;
+	setValue(value: NotNull): void;
 	toString(saveOptions?: SaveOptions): string;
 
 	clone(): IXElement;

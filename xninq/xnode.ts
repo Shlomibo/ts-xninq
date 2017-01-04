@@ -1,7 +1,7 @@
 import XObject from './xobject';
 import { IXNode, IXElement, SaveOptions } from './interfaces';
 import _ from 'ts-ninq';
-import { XName } from './xname';
+import { XName, XNameClass } from './xname';
 import { isNodesContainer } from './nodes-list';
 import { isValidParent } from './xobject';
 import XAttribute from './xattribute';
@@ -30,14 +30,16 @@ export abstract class XNode extends XObject implements IXNode {
 			this.parent.convertContent(content)
 		);
 	}
-	ancestors(): _<IXNode> {
+	ancestors(name?: XName): _<IXElement> {
 		const that = this;
 		return new _(ancGenerator());
 
 		function* ancGenerator() {
 			if (that.parent) {
-				yield that.parent;
-				yield* that.parent.ancestors();
+				if (XNameClass.equals(that.parent.name, name)) {
+					yield that.parent;
+				}
+				yield* that.parent.ancestors(name);
 			}
 		}
 	}

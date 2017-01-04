@@ -1,14 +1,14 @@
 import { XNode } from './xnode';
-import { IXText, IXCData } from './interfaces';
+import { IXTextNode, IXCData } from './interfaces';
 import { escape } from './xobject';
 import { createEscape } from './escape';
 import { Converter } from './converter';
 
-export class XText extends XNode implements IXText {
+export class XText extends XNode implements IXTextNode {
 	nodeType: 'text' | 'cdata';
 	value: string;
 
-	constructor(value: string | IXText) {
+	constructor(value: string | IXTextNode) {
 		if (typeof value === 'string') {
 			super();
 			this.value = value;
