@@ -13,13 +13,14 @@ import {
 import XDeclaration from './xdeclaration';
 import XDocumentType from './xdocument-type';
 import { XElement } from './xelement';
-import { Maybe } from './converter';
+import { Maybe, ObjectConverter, ObjectConvertableConverter } from './converter';
 import _ from 'ts-ninq';
 import { createWriteStream } from 'fs';
 import XComment from './xcomment';
 import XObject from './xobject';
 import XNode from './xnode';
 import { Writable as Stream } from 'stream';
+import toObject from './json';
 
 export class XDocument extends XContainer implements IXDocument {
 	readonly parent: undefined;
@@ -27,6 +28,7 @@ export class XDocument extends XContainer implements IXDocument {
 	readonly documentType?: XDocumentType;
 	readonly nodeType: 'document';
 	readonly root: XElement;
+	readonly to: ObjectConverter;
 	protected readonly validNodeTypes: NodeType[];
 
 	constructor(other: IXDocument);
@@ -77,6 +79,10 @@ export class XDocument extends XContainer implements IXDocument {
 			throw new Error('Missing root element');
 		}
 
+		this.to = new ObjectConvertableConverter(
+			() => { throw new Error('Not implemeneted'); },
+			(parser?, builder?) => toObject(this, parser, builder)
+		);
 		this.nodeType = 'document';
 		this.validNodeTypes = [
 			'comment',

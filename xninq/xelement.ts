@@ -3,7 +3,7 @@ import { IXElement, IXNode, IXAttribute, SaveOptions, NodeType, isXTextOrCData, 
 import { XName, isXName, XNamespaceClass, XNamespace, XNameClass } from './xname';
 import _ from 'ts-ninq';
 import { TraverseMapping } from 'ts-ninq';
-import { Maybe, Converter } from './converter';
+import { Maybe, Converter, ObjectConvertableConverter } from './converter';
 import { Writable as Stream } from 'stream';
 import AttributesList from './attributes-lists';
 import XAttribute from './xattribute';
@@ -11,12 +11,13 @@ import { createWriteStream } from 'fs';
 import { NotNull } from 'ts-ninq';
 import { escape } from './xobject';
 import XNode from './xnode';
+import toObject from './json';
 
 export class XElement extends XContainer implements IXElement {
 
 	private _attriubtes: AttributesList;
 	name: XNameClass;
-	readonly to: Converter;
+	readonly to: ObjectConvertableConverter;
 	readonly nodeType: 'element';
 	protected readonly validNodeTypes: NodeType[];
 
@@ -37,7 +38,10 @@ export class XElement extends XContainer implements IXElement {
 			this,
 			this.document as any,
 		);
-		this.to = new Converter(() => this.value);
+		this.to = new ObjectConvertableConverter(
+			() => this.value,
+			(parser?, builder?) => toObject(this, parser, builder),
+		);
 		this.nodeType = 'element';
 		this.validNodeTypes = [
 			'attribute',

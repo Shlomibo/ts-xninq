@@ -2,8 +2,11 @@ import * as uuid from 'node-uuid';
 import XObject from './xobject';
 import XText from './xtext';
 import { isXObject } from './interfaces';
+import { SimpleElement, Builder, Parser } from './json';
+
 export type Maybe<T> = T | undefined;
-export type Getter = () => Maybe<string>;
+export type ValueGetter = () => Maybe<string>;
+export type ObjectGetter = (parser?: any, builder?: any) => {};
 
 const valueConverters = {
 	'undefined': (val: any) => undefined,
@@ -19,9 +22,9 @@ const valueConverters = {
 };
 
 export class Converter {
-	private readonly _getter: Getter;
+	private readonly _getter: ValueGetter;
 
-	constructor(getter: Getter) {
+	constructor(getter: ValueGetter) {
 		this._getter = getter;
 	}
 
@@ -97,5 +100,48 @@ export class Converter {
 
 	static from(value: any): Maybe<XObject> {
 		return valueConverters[typeof value](value);
+	}
+}
+
+export default Converter;
+
+export interface ObjectConverter {
+	object(): SimpleElement;
+	object<TDoc, TElement, TAttr, TText>(
+		builder: Partial<Builder<TDoc, TElement, TAttr, TText>>
+	): TDoc | TElement;
+	object<TAttr, TText>(parser: Partial<Parser<TAttr, TText>>): SimpleElement;
+	object<TDoc, TElement, TAttr, TText>(
+		parser: Partial<Parser<TAttr, TText>>,
+		builder: Partial<Builder<TDoc, TElement, TAttr, TText>>
+	): TDoc | TElement;
+}
+
+export class ObjectConvertableConverter extends Converter implements ObjectConverter {
+	private readonly _objectGetter: ObjectGetter;
+
+	constructor(
+		valueGetter: ValueGetter,
+		objectGetter: ObjectGetter,
+	) {
+		super(valueGetter);
+		this._objectGetter = objectGetter;
+	}
+
+	object(): SimpleElement;
+	object<TDoc, TElement, TAttr, TText>(
+		builder: Partial<Builder<TDoc, TElement, TAttr, TText>>
+	): TDoc | TElement;
+	object<TAttr, TText>(parser: Partial<Parser<TAttr, TText>>): SimpleElement;
+	object<TDoc, TElement, TAttr, TText>(
+		parser: Partial<Parser<TAttr, TText>>,
+		builder: Partial<Builder<TDoc, TElement, TAttr, TText>>
+	): TDoc | TElement;
+	object(
+		parser?: any,
+		builder?: any
+	): { } {
+
+		return this._objectGetter(parser, builder);
 	}
 }

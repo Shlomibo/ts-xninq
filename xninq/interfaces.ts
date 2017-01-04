@@ -1,7 +1,7 @@
 import _ from 'ts-ninq';
 import { NotNull } from 'ts-ninq';
 import { XName, XNameClass, XNamespaceClass, XNamespace } from './xname';
-import { Converter, Maybe } from './converter';
+import { Converter, Maybe, ObjectConvertableConverter, ObjectConverter } from './converter';
 import { Writable as Stream } from 'stream';
 
 export type ChangeEvent = 'changing' | 'changed';
@@ -214,6 +214,7 @@ export interface IXDocument extends IXContainer {
 	readonly nodeType: 'document';
 	readonly root: IXElement;
 	parent: undefined;
+	to: ObjectConverter;
 
 	save(to: string | Stream, saveOptions?: SaveOptions): Promise<void>;
 	toString(saveOptions?: SaveOptions): string;
@@ -232,7 +233,7 @@ export interface IXElement extends IXContainer {
 	name: XName;
 	readonly nodeType: 'element';
 	value: string;
-	readonly to: Converter;
+	readonly to: ObjectConvertableConverter;
 
 	ancestorsAndSelf(name?: XName): _<IXElement>;
 	attribute(name: XName): Maybe<IXAttribute>;
