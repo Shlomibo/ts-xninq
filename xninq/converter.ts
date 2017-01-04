@@ -1,7 +1,22 @@
 import * as uuid from 'node-uuid';
 import XObject from './xobject';
+import XText from './xtext';
+import { isXObject } from './interfaces';
 export type Maybe<T> = T | undefined;
 export type Getter = () => Maybe<string>;
+
+const valueConverters = {
+	'undefined': (val: any) => undefined,
+	string: (val: any) => new XText(val),
+	boolean: (val: any) => valueConverters.string(val.toString()),
+	number: (val: any) => valueConverters.string(val.toString()),
+	symbol: (val: any) => valueConverters.string(val.toString()),
+	object: (val: any) =>
+		!val ? valueConverters.undefined(val) :
+			isXObject(val) ? val :
+				valueConverters.string(Converter.fromValue(val)),
+	'function': (val: any) => valueConverters.object(val),
+};
 
 export class Converter {
 	private readonly _getter: Getter;
@@ -81,6 +96,6 @@ export class Converter {
 	}
 
 	static from(value: any): Maybe<XObject> {
-
+		return valueConverters[typeof value](value);
 	}
 }
